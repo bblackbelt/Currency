@@ -7,11 +7,17 @@ import io.reactivex.Single
 
 interface CurrencyUseCase {
 
-    fun loadRates(base: String): Single<Rates>
+    fun loadRates(base: String): Single<RatesState>
 
     class Impl(private val service: CurrencyService, private val mapper: CurrencyRatesMapper): CurrencyUseCase {
-        override fun loadRates(base: String): Single<Rates> =
+        override fun loadRates(base: String): Single<RatesState> =
             service.loadRates(base)
-                .map { mapper.map(it) }
+                .map { RatesState.OK(mapper.map(it)) as RatesState }
+                .onErrorReturn { RatesState.ERROR(it) }
     }
+}
+
+sealed class RatesState {
+    data class OK(val rates: Rates): RatesState()
+    data class ERROR(val throwable: Throwable): RatesState()
 }

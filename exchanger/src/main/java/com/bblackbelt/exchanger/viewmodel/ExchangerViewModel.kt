@@ -2,7 +2,9 @@ package com.bblackbelt.exchanger.viewmodel
 
 import androidx.lifecycle.*
 import com.bblackbelt.domain.CurrencyUseCase
+import com.bblackbelt.domain.RatesState
 import com.bblackbelt.domain.model.Rate
+import com.bblackbelt.domain.model.Rates
 
 import com.bblackbelt.exchanger.model.RateView
 import io.reactivex.BackpressureStrategy
@@ -22,31 +24,31 @@ class ExchangerViewModel constructor(useCase: CurrencyUseCase) : ViewModel() {
 
     private val amountToExchange: BehaviorSubject<Float> = BehaviorSubject.createDefault(0f)
 
+    private var lastSeenList: MutableList<RateView> = mutableListOf()
+
     val rates = Transformations.switchMap(baseRate) { rate ->
-        val ratesFlowable: Flowable<List<Rate>> = Observable.timer(1, TimeUnit.SECONDS)
+        val ratesFlowable: Observable<Rates> = Observable.timer(1, TimeUnit.SECONDS)
             .switchMap { useCase.loadRates(rate.currency).toObservable() }
-            .map { ratesObj -> ratesObj.rates }
-            .flatMapIterable { it }
-            .toList()
-            .onErrorReturn { listOf() }
+            .filter { it is RatesState.OK }
+            .map { ratesObj -> (ratesObj as RatesState.OK).rates }
             .repeat()
 
-        val amountFlowable = amountToExchange.toFlowable(BackpressureStrategy.LATEST)
+
+        val amountFlowable = amountToExchange
 
         LiveDataReactiveStreams.fromPublisher(
-            Flowable.combineLatest(ratesFlowable,
-                amountFlowable, BiFunction<List<Rate>, Float, List<RateView>>
-                { items, value ->
+            Observable.combineLatest(ratesFlowable,
+                amountFlowable, BiFunction<Rates, Float, List<RateView>>
+                { items, currentAmount ->
                     _loading.postValue(false)
-                    items.map {
-                        RateView(
-                            it.currency,
-                            it.rate,
-                            getCurrencyName(it.currency),
-                            it.rate * value
-                        )
+                    return@BiFunction if (lastSeenList.isEmpty()) {
+                        lastSeenList.addAll(createRates(items.rates, currentAmount))
+                        lastSeenList
+                    } else {
+                        updateRates(lastSeenList.toList(), items.rates, currentAmount)
                     }
-                })
+
+                }).toFlowable(BackpressureStrategy.LATEST)
         )
     }
 
@@ -58,12 +60,49 @@ class ExchangerViewModel constructor(useCase: CurrencyUseCase) : ViewModel() {
         return Currency.getInstance(currencyCode).displayName
     }
 
+    private fun updateRates(
+        current: List<RateView>,
+        rates: Map<String, Float>,
+        currentAmount: Float
+    ): List<RateView> {
+        return current.map {
+            val tmpRate = rates[it.currency] ?: 0f
+            RateView(
+                it.currency,
+                tmpRate,
+                getCurrencyName(it.currency),
+                tmpRate * currentAmount
+            )
+        }
+    }
+
+    private fun createRates(
+        rates: Map<String, Float>,
+        currentAmount: Float
+    ): List<RateView> {
+        return rates.map { rate ->
+            RateView(
+                rate.key,
+                rate.value,
+                getCurrencyName(rate.key),
+                rate.value * currentAmount
+            )
+        }
+
+    }
+
     fun updateBaseRate(newBaseRate: RateView) {
-        val tmp = rates.value?.toMutableList()
-        tmp?.let {
-            val toRemove = tmp.find { it.currency == newBaseRate.currency }
-            tmp.remove(toRemove)
-            (rates as? MutableLiveData)?.value = tmp
+
+        synchronized(lastSeenList) {
+            val item = lastSeenList.find { it.currency == newBaseRate.currency }
+            if (item != null) {
+                lastSeenList.remove(item)
+                val currentBaseRate = _baseRate.value
+                if (currentBaseRate != null) {
+                    lastSeenList.add(0, currentBaseRate)
+                }
+            }
+            (rates as? MutableLiveData)?.value = lastSeenList
         }
 
         _baseRate.value = newBaseRate

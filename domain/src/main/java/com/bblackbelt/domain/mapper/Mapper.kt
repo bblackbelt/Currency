@@ -27,8 +27,8 @@ interface CurrencyRatesMapper : Mapper<RatesDto, Rates> {
 
         override fun map(input: RatesDto): Rates {
             val baseRate = Rate(input.base, 1f)
-            val rates = input.rates.map { currencyRateMapper.map(it) }
-            return Rates(baseRate, rates)
+           // val rates = input.rates.map { currencyRateMapper.map(it) }
+            return Rates(baseRate, input.rates)
         }
     }
 }
