@@ -2,7 +2,9 @@
     package="com.bblackbelt.exchanger">
 
     <application>
-        <activity android:name=".ExchangerActivity">
+        <activity
+            android:label=""
+            android:name=".ExchangerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

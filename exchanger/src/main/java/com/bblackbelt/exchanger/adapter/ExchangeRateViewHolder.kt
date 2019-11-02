@@ -10,7 +10,7 @@ class ExchangeRateViewHolder(itemView: View, private val onRateClicked: (RateVie
     RecyclerView.ViewHolder(itemView) {
 
     private val currency = itemView.findViewById<TextView>(R.id.currency)
-    private val convertedValue = itemView.findViewById<TextView>(R.id.value)
+    private val convertedValue = itemView.findViewById<TextView>(R.id.convertedCurrencyValue)
     private val currencyName = itemView.findViewById<TextView>(R.id.currencyName)
 
     fun bindView(r: RateView) {

@@ -6,7 +6,6 @@
     android:minHeight="64dp">
 
     <TextView
-        android:layout_marginStart="8dp"
         android:id="@+id/currency"
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -14,13 +13,12 @@
         android:gravity="center_vertical"
         android:textColor="@android:color/black"
         android:textSize="16sp"
-        app:layout_constraintEnd_toStartOf="@id/value"
+        app:layout_constraintEnd_toStartOf="@id/convertedCurrencyValue"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
     <TextView
-        android:layout_marginStart="8dp"
         android:id="@+id/currencyName"
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -28,16 +26,17 @@
         android:gravity="center_vertical"
         android:textColor="#8B959E"
         android:textSize="14sp"
-        app:layout_constraintEnd_toStartOf="@id/value"
+        app:layout_constraintEnd_toStartOf="@id/convertedCurrencyValue"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/currency" />
 
     <EditText
-        android:id="@+id/value"
+        android:id="@+id/convertedCurrencyValue"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:enabled="false"
         android:hint="0"
+        android:textColor="@android:color/black"
         android:inputType="numberDecimal"
         app:layout_constraintEnd_toEndOf="parent" />
 
