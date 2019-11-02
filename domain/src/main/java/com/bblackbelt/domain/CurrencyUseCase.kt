@@ -13,6 +13,5 @@ interface CurrencyUseCase {
         override fun loadRates(base: String): Single<Rates> =
             service.loadRates(base)
                 .map { mapper.map(it) }
-
     }
 }
