@@ -1,5 +1,6 @@
 package com.bblackbelt.data.di
 
+import com.bblackbelt.data.ApiService
 import com.bblackbelt.data.CurrencyService
 import io.reactivex.schedulers.Schedulers
 import org.koin.dsl.module
@@ -15,6 +16,8 @@ val dataModule = module {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
+    single<ApiService> { get<Retrofit>().create(ApiService::class.java) }
 
     factory<CurrencyService> { CurrencyService.Impl(get()) }
 }

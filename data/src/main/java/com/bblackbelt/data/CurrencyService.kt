@@ -6,11 +6,7 @@ import retrofit2.Retrofit
 
 interface CurrencyService : ApiService {
 
-    class Impl(private val retrofit: Retrofit): CurrencyService {
-
-        private val service by lazy {
-            retrofit.create(ApiService::class.java)
-        }
+    class Impl(private val service: ApiService): CurrencyService {
 
         override fun loadRates(base: String): Single<RatesDto> = service.loadRates(base)
     }
