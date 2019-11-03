@@ -6,13 +6,13 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import com.bblackbelt.domain.model.Rate
 import com.bblackbelt.exchanger.adapter.ExchangeRateAdapter
 import com.bblackbelt.exchanger.model.RateView
 import com.bblackbelt.exchanger.viewmodel.ExchangerViewModel
 import kotlinx.android.synthetic.main.activity_exchanger.*
 import kotlinx.android.synthetic.main.currency_row.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.util.*
 
 
 class ExchangerActivity : AppCompatActivity() {
@@ -29,7 +29,6 @@ class ExchangerActivity : AppCompatActivity() {
             exchangerViewModel.updateBaseRate(it)
         }
 
-        exchangerViewModel.updateBaseRate(RateView(DEFAULT_BASE_CURRENCY, 1f, ""))
         exchangerViewModel.rates.observe(this, Observer { items: List<RateView> ->
             adapter.setItems(items)
         })
@@ -38,8 +37,16 @@ class ExchangerActivity : AppCompatActivity() {
             updateBaseRateView(it)
         })
 
+        exchangerViewModel.updateBaseRate(
+            RateView(
+                DEFAULT_BASE_CURRENCY, 1f, Currency.getInstance(
+                    DEFAULT_BASE_CURRENCY
+                ).displayName
+            )
+        )
+
         exchangerViewModel.loading.observe(this, Observer {
-            progressBar.visibility = if(it) {
+            progressBar.visibility = if (it) {
                 View.VISIBLE
             } else {
                 View.GONE
@@ -56,7 +63,7 @@ class ExchangerActivity : AppCompatActivity() {
                 state: RecyclerView.State
             ) {
                 outRect.set(margin, margin, margin, 0)
-                if (parent.getChildAdapterPosition(view) == adapter.itemCount -1) {
+                if (parent.getChildAdapterPosition(view) == adapter.itemCount - 1) {
                     outRect.bottom = margin
                 }
             }
@@ -64,7 +71,7 @@ class ExchangerActivity : AppCompatActivity() {
     }
 
     private fun updateBaseRateView(rateView: RateView) {
-        currencyName.text = rateView.currency
+        currencyName.text = rateView.name
         currency.text = rateView.currency
         convertedCurrencyValue.isEnabled = true
         convertedCurrencyValue.afterTextChanged {
